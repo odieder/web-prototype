@@ -93,6 +93,39 @@ def classify_text(text: str) -> str:
     return normalized
 
 
+def generate_response(text: str, category: str) -> str:
+    if category not in CATEGORIES:
+        raise HTTPException(status_code=500, detail="Unknown category for response generation")
+
+    logger.info("generate_response: start (category=%s, model=%s)", category, OPENAI_MODEL)
+    try:
+        response = client.responses.create(
+            model=OPENAI_MODEL,
+            input=(
+                "Schreibe eine kurze Antwort auf Deutsch (max. 2-3 Sätze) für den Nutzer.\n"
+                "Beschreibe kurz, worum es im Dokument geht, und was als Nächstes zu tun ist.\n"
+                "Kategorie-Regeln:\n"
+                "- Rechnung: Betrag und Fälligkeitsdatum nennen, falls im Text erkennbar.\n"
+                "- Amt: geforderte Handlung oder Frist nennen.\n"
+                "- Vertrag: vor Unterschrift Bedingungen prüfen empfehlen.\n"
+                "- Spam: klar warnen, ignorieren.\n"
+                "- Einladung: kurz zusammenfassen (was, wann, wo falls erkennbar).\n"
+                "Keine Aufzählung, keine Einleitung.\n\n"
+                f"Kategorie: {category}\n"
+                f"Text:\n{text[:2000]}"
+            ),
+            max_output_tokens=120,
+        )
+    except Exception as exc:
+        logger.exception("generate_response: OpenAI request failed")
+        raise HTTPException(status_code=502, detail="Response generation failed") from exc
+
+    generated = _extract_response_text(response).strip()
+    if not generated:
+        raise HTTPException(status_code=502, detail="Empty generated response")
+    return generated
+
+
 @app.post("/upload")
 async def upload_file(file: UploadFile = File(...)):
     if file.content_type not in ALLOWED_CONTENT_TYPES:
@@ -104,4 +137,10 @@ async def upload_file(file: UploadFile = File(...)):
 
     text = extract_text(content=content, content_type=file.content_type)
     category = classify_text(text)
-    return {"filename": file.filename, "text": text, "category": category}
+    user_response = generate_response(text=text, category=category)
+    return {
+        "filename": file.filename,
+        "text": text,
+        "category": category,
+        "response": user_response,
+    }

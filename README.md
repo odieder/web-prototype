@@ -18,4 +18,4 @@ uvicorn main:app --reload
 ## Endpoint
 
 - `GET /` -> `{"message":"Hello World"}`
-- `POST /upload` -> `{"filename":"...","text":"...","category":"Rechnung"}`
+- `POST /upload` -> `{"filename":"...","text":"...","category":"Rechnung","response":"..."}`
