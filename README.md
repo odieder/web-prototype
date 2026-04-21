@@ -12,7 +12,7 @@ pip install -r requirements.txt
 
 ```bash
 export OPENAI_API_KEY="your_api_key_here"
-uvicorn main:app --reload
+uvicorn backend.main:app --reload
 ```
 
 ## Frontend

@@ -28,8 +28,13 @@ export default function App() {
         throw new Error(data?.detail || "Upload fehlgeschlagen.");
       }
       setResult({
+        filename: data.filename,
         category: data.category,
-        response: data.response,
+        summary: data.summary,
+        action: data.action,
+        deadline: data.deadline,
+        deadlineText: data.deadline_text,
+        urgency: data.urgency,
       });
     } catch (err) {
       if (err instanceof TypeError) {
@@ -47,7 +52,7 @@ export default function App() {
   return (
     <>
       <header className="topbar">
-        <div className="topbar-inner">Quick-Tipp</div>
+        <div className="topbar-inner">Dokunaut – Texte rein. To-Dos raus.</div>
       </header>
 
       <main className="page">
@@ -59,7 +64,17 @@ export default function App() {
 
           {isLoading && <p className="status">Datei wird verarbeitet...</p>}
           {error && <p className="error">{error}</p>}
-          {result && <Result category={result.category} response={result.response} />}
+          {result && (
+            <Result
+              filename={result.filename}
+              category={result.category}
+              summary={result.summary}
+              action={result.action}
+              deadline={result.deadline}
+              deadlineText={result.deadlineText}
+              urgency={result.urgency}
+            />
+          )}
         </section>
       </main>
     </>
